@@ -16,7 +16,8 @@ def generate_launch_description():
                 parameters=[
                     {
                         "interface": "virtual",
-                        "plugin": "joint_state_can_controller.mock",
+                        "plugin": "joint_state_can_controller.mock.CAN",
+                        "params": ["interface=virtual"],
                     }
                 ],
             ),

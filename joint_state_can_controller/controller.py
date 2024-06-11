@@ -4,7 +4,6 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 
 import importlib
-import can
 
 
 class ControllerNode(Node):
@@ -13,10 +12,8 @@ class ControllerNode(Node):
 
         self.declare_parameter("joint_states", "~/joint_states")
         self.declare_parameter("joint_commands", "~/joint_commands")
-        self.declare_parameter("interface", rclpy.Parameter.Type.STRING)
-        self.declare_parameter("channel", rclpy.Parameter.Type.STRING)
-        self.declare_parameter("bitrate", rclpy.Parameter.Type.INTEGER)
         self.declare_parameter("plugin", rclpy.Parameter.Type.STRING)
+        self.declare_parameter("params", rclpy.Parameter.Type.STRING_ARRAY)
 
         self.joint_states_ = (
             self.get_parameter("joint_states").get_parameter_value().string_value
@@ -24,49 +21,42 @@ class ControllerNode(Node):
         self.joint_commands_ = (
             self.get_parameter("joint_commands").get_parameter_value().string_value
         )
-        self.interface_ = (
-            self.get_parameter("interface").get_parameter_value().string_value
-        )
-        self.channel_ = (
-            self.get_parameter("channel").get_parameter_value().string_value
-            if self.get_parameter_or("channel").value
-            else None
-        )
-        self.bitrate_ = (
-            self.get_parameter("bitrate").get_parameter_value().integer_value
-            if self.get_parameter_or("bitrate").value
-            else None
-        )
-        self.plugin_ = self.get_parameter("plugin").get_parameter_value().string_value
-        self.plugin_ = importlib.import_module(self.plugin_)
 
-        self.get_logger().info(
-            "parameters: joint_states={} joint_commands={} interface={} channel={} bitrate={} plugin={}".format(
-                self.joint_states_,
-                self.joint_commands_,
-                self.interface_,
-                self.channel_,
-                self.bitrate_,
-                self.plugin_.__name__,
+        plugin = self.get_parameter("plugin").get_parameter_value().string_value
+        params = dict(
+            map(
+                lambda e: tuple(e.split("=", maxsplit=1)),
+                self.get_parameter("params").get_parameter_value().string_array_value,
             )
         )
 
-        self.bus_ = can.Bus(
-            interface=self.interface_, channel=self.channel_, bitrate=self.bitrate_
+        self.get_logger().info(
+            "parameters: joint_states={} joint_commands={} plugin={} params={}".format(
+                self.joint_states_,
+                self.joint_commands_,
+                plugin,
+                params,
+            )
         )
+        plugin_module, plugin_class = plugin.rsplit(".", maxsplit=1)
+        self.plugin_ = getattr(importlib.import_module(plugin_module), plugin_class)(
+            **params
+        )
+
         self.publisher_ = self.create_publisher(JointState, self.joint_states_, 10)
         self.subscription_ = self.create_subscription(
             JointState, self.joint_commands_, self.subscription_callback, 10
         )
 
     def __enter__(self):
-        if self.bus_:
-            self.bus_.__enter__()
+        if self.plugin_:
+            self.plugin_.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if self.bus_:
-            self.bus_.__exit__(exc_type, exc_value, traceback)
+        if self.plugin_:
+            self.plugin_.__exit__(exc_type, exc_value, traceback)
+        return None
 
     def subscription_callback(self, msg):
         self.get_logger().info(f"subscription: joint_commands={msg}")
@@ -84,7 +74,7 @@ class ControllerNode(Node):
             position = msg.position[index] if msg.position else None
             velocity = msg.velocity[index] if msg.velocity else None
             effort = msg.effort[index] if msg.effort else None
-            self.plugin_.send_command(self.bus_, name, position, velocity, effort)
+            self.plugin_.send_command(name, position, velocity, effort)
 
 
 def main(args=None):
