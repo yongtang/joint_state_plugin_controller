@@ -27,9 +27,15 @@ class ControllerNode(Node):
         self.interface_ = (
             self.get_parameter("interface").get_parameter_value().string_value
         )
-        self.channel_ = self.get_parameter("channel").get_parameter_value().string_value
+        self.channel_ = (
+            self.get_parameter("channel").get_parameter_value().string_value
+            if self.get_parameter_or("channel").value
+            else None
+        )
         self.bitrate_ = (
             self.get_parameter("bitrate").get_parameter_value().integer_value
+            if self.get_parameter_or("bitrate").value
+            else None
         )
         self.plugin_ = self.get_parameter("plugin").get_parameter_value().string_value
         self.plugin_ = importlib.import_module(self.plugin_)
@@ -78,7 +84,7 @@ class ControllerNode(Node):
             position = msg.position[index] if msg.position else None
             velocity = msg.velocity[index] if msg.velocity else None
             effort = msg.effort[index] if msg.effort else None
-            self.plugin_.send_command(sef.bus_, position, velocity, effort)
+            self.plugin_.send_command(self.bus_, name, position, velocity, effort)
 
 
 def main(args=None):

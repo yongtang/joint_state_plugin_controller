@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
 
+import os, glob
+
 package_name = 'joint_state_can_controller'
 
 setup(
@@ -10,6 +12,10 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (
+            os.path.join("share", package_name, "launch"),
+            glob.glob(os.path.join("launch", "launch.*.py")),
+        ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
