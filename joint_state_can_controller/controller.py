@@ -3,6 +3,8 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import JointState
 
+import can
+
 
 class ControllerNode(Node):
     def __init__(self):
@@ -10,25 +12,49 @@ class ControllerNode(Node):
 
         self.declare_parameter("joint_states", "~/joint_states")
         self.declare_parameter("joint_commands", "~/joint_commands")
+        self.declare_parameter("interface", rclpy.Parameter.Type.STRING)
+        self.declare_parameter("channel", rclpy.Parameter.Type.STRING)
+        self.declare_parameter("bitrate", rclpy.Parameter.Type.INTEGER)
 
-        self.joint_states = (
+        self.joint_states_ = (
             self.get_parameter("joint_states").get_parameter_value().string_value
         )
-        self.joint_commands = (
+        self.joint_commands_ = (
             self.get_parameter("joint_commands").get_parameter_value().string_value
+        )
+        self.interface_ = (
+            self.get_parameter("interface").get_parameter_value().string_value
+        )
+        self.channel_ = self.get_parameter("channel").get_parameter_value().string_value
+        self.bitrate_ = (
+            self.get_parameter("bitrate").get_parameter_value().integer_value
         )
 
         self.get_logger().info(
-            f"parameters: joint_states={self.joint_states} joint_commands={self.joint_commands}"
+            f"parameters: joint_states={self.joint_states_} joint_commands={self.joint_commands_} interface={self.interface_} channel={self.channel_} bitrate={self.bitrate_}"
         )
 
-        self.publisher = self.create_publisher(JointState, self.joint_states, 10)
-        self.subscription = self.create_subscription(
-            JointState, self.joint_commands, self.subscription_callback, 10
+        self.publisher_ = self.create_publisher(JointState, self.joint_states_, 10)
+        self.subscription_ = self.create_subscription(
+            JointState, self.joint_commands_, self.subscription_callback, 10
         )
 
     def subscription_callback(self, msg):
         self.get_logger().info(f"subscription: joint_states={msg}")
+        assert (
+            len(msg.name) == len(msg.position) or not msg.position
+        ), f"name({msg.name}) vs. position({msg.position})"
+        assert (
+            len(msg.name) == len(msg.velocity) or not msg.velocity
+        ), f"name({msg.name}) vs. position({msg.velocity})"
+        assert (
+            len(msg.name) == len(msg.effort) or not msg.effort
+        ), f"name({msg.name}) vs. position({msg.effort})"
+
+        for index, name in enumerate(msg.name):
+            position = msg.position[index] if msg.position else None
+            velocity = msg.velocity[index] if msg.velocity else None
+            effort = msg.effort[index] if msg.effort else None
 
 
 def main(args=None):
