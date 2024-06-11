@@ -33,11 +33,22 @@ class ControllerNode(Node):
         self.get_logger().info(
             f"parameters: joint_states={self.joint_states_} joint_commands={self.joint_commands_} interface={self.interface_} channel={self.channel_} bitrate={self.bitrate_}"
         )
-
+        self.bus_ = can.Bus(
+            interface=self.interface_, channel=self.channel_, bitrate=self.bitrate_
+        )
         self.publisher_ = self.create_publisher(JointState, self.joint_states_, 10)
         self.subscription_ = self.create_subscription(
             JointState, self.joint_commands_, self.subscription_callback, 10
         )
+
+    def __enter__(self):
+        if self.bus_:
+            self.bus_.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.bus_:
+            self.bus_.__exit__(exc_type, exc_value, traceback)
 
     def subscription_callback(self, msg):
         self.get_logger().info(f"subscription: joint_states={msg}")
@@ -60,12 +71,12 @@ class ControllerNode(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    node = ControllerNode()
-    try:
-        rclpy.spin(node)
-    finally:
-        node.destroy_node()
-        rclpy.try_shutdown()
+    with ControllerNode() as node:
+        try:
+            rclpy.spin(node)
+        finally:
+            node.destroy_node()
+            rclpy.try_shutdown()
 
 
 if __name__ == "__main__":
