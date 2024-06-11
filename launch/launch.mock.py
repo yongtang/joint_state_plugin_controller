@@ -7,7 +7,7 @@ def generate_launch_description():
         [
             Node(
                 executable="controller",
-                package="joint_state_can_controller",
+                package="joint_state_plugin_controller",
                 output="screen",
                 arguments=[
                     "--ros-args",
@@ -16,7 +16,7 @@ def generate_launch_description():
                 parameters=[
                     {
                         "interface": "virtual",
-                        "plugin": "joint_state_can_controller.mock.CAN",
+                        "plugin": "joint_state_plugin_controller.mock.CAN",
                         "params": ["interface=virtual"],
                     }
                 ],
