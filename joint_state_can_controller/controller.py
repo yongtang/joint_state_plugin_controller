@@ -3,6 +3,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import JointState
 
+import importlib
 import can
 
 
@@ -15,6 +16,7 @@ class ControllerNode(Node):
         self.declare_parameter("interface", rclpy.Parameter.Type.STRING)
         self.declare_parameter("channel", rclpy.Parameter.Type.STRING)
         self.declare_parameter("bitrate", rclpy.Parameter.Type.INTEGER)
+        self.declare_parameter("plugin", rclpy.Parameter.Type.STRING)
 
         self.joint_states_ = (
             self.get_parameter("joint_states").get_parameter_value().string_value
@@ -29,10 +31,20 @@ class ControllerNode(Node):
         self.bitrate_ = (
             self.get_parameter("bitrate").get_parameter_value().integer_value
         )
+        self.plugin_ = self.get_parameter("plugin").get_parameter_value().string_value
+        self.plugin_ = importlib.import_module(self.plugin_)
 
         self.get_logger().info(
-            f"parameters: joint_states={self.joint_states_} joint_commands={self.joint_commands_} interface={self.interface_} channel={self.channel_} bitrate={self.bitrate_}"
+            "parameters: joint_states={} joint_commands={} interface={} channel={} bitrate={} plugin={}".format(
+                self.joint_states_,
+                self.joint_commands_,
+                self.interface_,
+                self.channel_,
+                self.bitrate_,
+                self.plugin_.__name__,
+            )
         )
+
         self.bus_ = can.Bus(
             interface=self.interface_, channel=self.channel_, bitrate=self.bitrate_
         )
@@ -51,7 +63,7 @@ class ControllerNode(Node):
             self.bus_.__exit__(exc_type, exc_value, traceback)
 
     def subscription_callback(self, msg):
-        self.get_logger().info(f"subscription: joint_states={msg}")
+        self.get_logger().info(f"subscription: joint_commands={msg}")
         assert (
             len(msg.name) == len(msg.position) or not msg.position
         ), f"name({msg.name}) vs. position({msg.position})"
@@ -66,6 +78,7 @@ class ControllerNode(Node):
             position = msg.position[index] if msg.position else None
             velocity = msg.velocity[index] if msg.velocity else None
             effort = msg.effort[index] if msg.effort else None
+            self.plugin_.send_command(sef.bus_, position, velocity, effort)
 
 
 def main(args=None):
