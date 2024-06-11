@@ -6,18 +6,18 @@ def generate_launch_description():
     return LaunchDescription(
         [
             Node(
+                executable="mock",
+                package="joint_state_plugin_controller",
+                output="screen",
+            ),
+            Node(
                 executable="controller",
                 package="joint_state_plugin_controller",
                 output="screen",
-                arguments=[
-                    "--ros-args",
-                    "--disable-external-lib-logs",
-                ],
                 parameters=[
                     {
-                        "interface": "virtual",
                         "plugin": "joint_state_plugin_controller.mock.CAN",
-                        "params": ["interface=virtual"],
+                        "params": ["interface=udp_multicast"],
                     }
                 ],
             ),

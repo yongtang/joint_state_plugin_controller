@@ -26,7 +26,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'controller = joint_state_plugin_controller.controller:main'
+            'controller = joint_state_plugin_controller.controller:main',
+            'mock = joint_state_plugin_controller.mock:main',
         ],
     },
 )
