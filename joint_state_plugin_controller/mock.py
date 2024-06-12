@@ -24,6 +24,7 @@ class CAN(plugin.CAN):
         self.bus.send(msg)
 
     def recv_state(self, msg):
+        rclpy.logging.get_logger("{}".format("mock")).info("msg={}".format(msg))
         if msg.arbitration_id == 0x321:
             (position,) = struct.unpack("d", msg.data)
             return "mock", position, None, None
