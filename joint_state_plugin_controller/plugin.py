@@ -13,13 +13,25 @@ class Plugin(contextlib.AbstractContextManager):
     def notify_state(self, callback):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def query_state(self):
+        raise NotImplementedError
+
 
 class CAN(Plugin):
     def __init__(self, **params):
         self._bus_ = can.Bus(**params)
 
     @abc.abstractmethod
+    def send_command(self, name, position, velocity, effort):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def recv_state(self, msg):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def query_state(self):
         raise NotImplementedError
 
     def __enter__(self):

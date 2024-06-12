@@ -30,6 +30,10 @@ class CAN(plugin.CAN):
             return "mock", position, None, None
         return None, None, None, None
 
+    def query_state(self):
+        msg = can.Message(arbitration_id=0x100, data=[])
+        self.bus.send(msg)
+
 
 def main(args=None):
     joint_state = None
@@ -46,13 +50,17 @@ def main(args=None):
                 )
                 if joint_state != position:
                     time.sleep(1.0)
+                    joint_state = position
+            elif msg.arbitration_id == 0x100:
+                if joint_state is not None:
+                    position = joint_state
                     bus.send(
                         can.Message(
                             arbitration_id=0x321,
                             data=bytearray(struct.pack("d", float(position))),
                         )
                     )
-                    joint_state = position
+
         rclpy.logging.get_logger("can_mock").info("Final")
 
 

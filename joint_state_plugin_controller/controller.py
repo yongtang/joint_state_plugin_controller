@@ -12,6 +12,7 @@ class ControllerNode(Node):
 
         self.declare_parameter("joint_states", "~/joint_states")
         self.declare_parameter("joint_commands", "~/joint_commands")
+        self.declare_parameter("frequency", rclpy.Parameter.Type.DOUBLE)
         self.declare_parameter("plugin", rclpy.Parameter.Type.STRING)
         self.declare_parameter("params", rclpy.Parameter.Type.STRING_ARRAY)
 
@@ -20,6 +21,9 @@ class ControllerNode(Node):
         )
         self.joint_commands_ = (
             self.get_parameter("joint_commands").get_parameter_value().string_value
+        )
+        self.frequency_ = (
+            self.get_parameter("frequency").get_parameter_value().double_value
         )
 
         plugin = self.get_parameter("plugin").get_parameter_value().string_value
@@ -31,9 +35,10 @@ class ControllerNode(Node):
         )
 
         self.get_logger().info(
-            "parameters: joint_states={} joint_commands={} plugin={} params={}".format(
+            "parameters: joint_states={} joint_commands={} frequency={} plugin={} params={}".format(
                 self.joint_states_,
                 self.joint_commands_,
+                self.frequency_,
                 plugin,
                 params,
             )
@@ -43,6 +48,7 @@ class ControllerNode(Node):
             **params
         )
 
+        self.timer_ = self.create_timer((1.0 / self.frequency_), self.timer_callback)
         self.publisher_ = self.create_publisher(JointState, self.joint_states_, 10)
         self.subscription_ = self.create_subscription(
             JointState, self.joint_commands_, self.subscription_callback, 10
@@ -58,6 +64,9 @@ class ControllerNode(Node):
         if self.plugin_:
             self.plugin_.__exit__(exc_type, exc_value, traceback)
         return None
+
+    def timer_callback(self):
+        self.plugin_.query_state()
 
     def subscription_callback(self, msg):
         self.get_logger().info(f"subscription: joint_commands={msg}")

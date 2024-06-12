@@ -16,6 +16,7 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     {
+                        "frequency": 10.0,
                         "plugin": "joint_state_plugin_controller.mock.CAN",
                         "params": ["interface=udp_multicast"],
                     }
