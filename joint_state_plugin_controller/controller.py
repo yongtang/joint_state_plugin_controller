@@ -47,6 +47,7 @@ class ControllerNode(Node):
         self.subscription_ = self.create_subscription(
             JointState, self.joint_commands_, self.subscription_callback, 10
         )
+        self.plugin_.notify_state(self.notify_callback)
 
     def __enter__(self):
         if self.plugin_:
@@ -75,6 +76,15 @@ class ControllerNode(Node):
             velocity = msg.velocity[index] if msg.velocity else None
             effort = msg.effort[index] if msg.effort else None
             self.plugin_.send_command(name, position, velocity, effort)
+
+    def notify_callback(self, name, position, velocity, effort):
+        self.get_logger().info(
+            f"notify: name={name} position={position} velocity={velocity} effort={effort}"
+        )
+        msg = JointState()
+        msg.name = [name]
+        msg.position = [position]
+        self.publisher_.publish(msg)
 
 
 def main(args=None):

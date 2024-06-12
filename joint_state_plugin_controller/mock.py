@@ -1,3 +1,4 @@
+import time
 import struct
 
 from . import plugin
@@ -22,14 +23,35 @@ class CAN(plugin.CAN):
         )
         self.bus.send(msg)
 
+    def recv_state(self, msg):
+        if msg.arbitration_id == 0x321:
+            (position,) = struct.unpack("d", msg.data)
+            return "mock", position, None, None
+        return None, None, None, None
+
 
 def main(args=None):
+    joint_state = None
     with can.Bus(interface="udp_multicast") as bus:
         rclpy.logging.get_logger("can_mock").info("Start")
         for msg in bus:
-            rclpy.logging.get_logger("can_mock").info("{}".format(msg.data))
-            (position,) = struct.unpack("d", msg.data)
-            rclpy.logging.get_logger("can_mock").info("{}".format(position))
+            rclpy.logging.get_logger("can_mock").info(
+                "arbitration_id={}, data={}".format(msg.arbitration_id, msg.data)
+            )
+            if msg.arbitration_id == 0x123:
+                (position,) = struct.unpack("d", msg.data)
+                rclpy.logging.get_logger("can_mock").info(
+                    "joint_command={}".format(position)
+                )
+                if joint_state != position:
+                    time.sleep(1.0)
+                    bus.send(
+                        can.Message(
+                            arbitration_id=0x321,
+                            data=bytearray(struct.pack("d", float(position))),
+                        )
+                    )
+                    joint_state = position
         rclpy.logging.get_logger("can_mock").info("Final")
 
 
