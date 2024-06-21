@@ -8,7 +8,7 @@ import importlib
 
 class ControllerNode(Node):
     def __init__(self):
-        super().__init__("joint_state_plguin_controller")
+        super().__init__("joint_state_plugin_controller")
 
         self.declare_parameter("joint_states", "~/joint_states")
         self.declare_parameter("joint_commands", "~/joint_commands")
