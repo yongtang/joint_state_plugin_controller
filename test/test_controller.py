@@ -14,7 +14,7 @@ def proc_pub():
             "sensor_msgs/msg/JointState",
             "{name: ['mock'], position: [0.0], velocity: [1.0], effort: [0.0]}",
         ],
-        cached_output=True,
+        output="screen",
     )
 
 
@@ -28,6 +28,7 @@ def proc_sub():
             "/joint_state_plugin_controller/joint_states",
         ],
         cached_output=True,
+        output="screen",
     )
 
 
@@ -59,7 +60,7 @@ def launch_description(proc_pub, proc_sub):
                     "joint_state_plugin_controller",
                     "launch.mock.py",
                 ],
-                cached_output=True,
+                output="screen",
             ),
         ]
     )
