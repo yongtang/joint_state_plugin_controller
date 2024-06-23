@@ -1,6 +1,5 @@
 import pytest
 import launch
-import launch_ros
 import launch_pytest
 
 
@@ -53,22 +52,14 @@ def launch_description(proc_pub, proc_sub):
                     ],
                 )
             ),
-            launch_ros.actions.Node(
-                executable="mock",
-                package="joint_state_plugin_controller",
-                output="screen",
-            ),
-            launch_ros.actions.Node(
-                executable="controller",
-                package="joint_state_plugin_controller",
-                output="screen",
-                parameters=[
-                    {
-                        "frequency": 10.0,
-                        "plugin": "joint_state_plugin_controller.mock.CAN",
-                        "params": ["interface=udp_multicast"],
-                    }
+            launch.actions.ExecuteProcess(
+                cmd=[
+                    "ros2",
+                    "launch",
+                    "joint_state_plugin_controller",
+                    "launch.mock.py",
                 ],
+                cached_output=True,
             ),
         ]
     )
