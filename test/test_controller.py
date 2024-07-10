@@ -70,10 +70,6 @@ def launch_description(proc_pub, proc_sub):
 def test_read_stdout(proc_sub, launch_context):
     def validate_output(output):
         true = """
-header:
-  stamp:
-    sec: 0
-    nanosec: 0
   frame_id: ''
 name:
 - mock

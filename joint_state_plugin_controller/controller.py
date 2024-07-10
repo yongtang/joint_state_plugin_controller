@@ -91,6 +91,7 @@ class ControllerNode(Node):
             f"notify: name={name} position={position} velocity={velocity} effort={effort}"
         )
         msg = JointState()
+        msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = [name]
         msg.position = [position]
         self.publisher_.publish(msg)
