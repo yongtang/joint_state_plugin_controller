@@ -77,6 +77,9 @@ position:
 - 0.0
 velocity: []
 effort: []
+---
+header:
+  stamp:
 """
         assert true in output, output
 
