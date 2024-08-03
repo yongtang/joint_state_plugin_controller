@@ -42,8 +42,12 @@ class CAN(plugin.CAN):
         return None, None, None, None
 
     def query_state(self):
-        msg = can.Message(arbitration_id=0x100, data=[])
-        self.bus.send(msg)
+        for e in range(len(self.joint)):
+            rclpy.logging.get_logger("{}".format("mock")).info(
+                "query joint={}".format(self.joint[e])
+            )
+            msg = can.Message(arbitration_id=0x100 + e, data=[])
+            self.bus.send(msg)
 
 
 class Mock(rclpy.node.Node):
