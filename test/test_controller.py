@@ -12,7 +12,7 @@ def proc_pub():
             "pub",
             "/joint_state_plugin_controller/joint_commands",
             "sensor_msgs/msg/JointState",
-            "{name: ['mock'], position: [0.0], velocity: [1.0], effort: [0.0]}",
+            "{name: ['j1'], position: [0.0], velocity: [1.0], effort: [0.0]}",
         ],
         output="screen",
     )
@@ -72,7 +72,7 @@ def test_read_stdout(proc_sub, launch_context):
         true = """
   frame_id: ''
 name:
-- mock
+- j1
 position:
 - 0.0
 velocity: []

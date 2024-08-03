@@ -9,6 +9,11 @@ def generate_launch_description():
                 executable="mock",
                 package="joint_state_plugin_controller",
                 output="screen",
+                parameters=[
+                    {
+                        "joint": "j1,j2,j3,j4,j5,j6",
+                    }
+                ],
             ),
             Node(
                 executable="controller",
@@ -18,7 +23,10 @@ def generate_launch_description():
                     {
                         "frequency": 10.0,
                         "plugin": "joint_state_plugin_controller.mock.CAN",
-                        "params": ["interface=udp_multicast"],
+                        "params": [
+                            "interface=udp_multicast",
+                            "joint=j1,j2,j3,j4,j5,j6",
+                        ],
                     }
                 ],
             ),
